@@ -132,6 +132,9 @@
     #calcInfo2{display:none !important}
     .card.print-break{display:flex;flex-direction:column}
     #calcInfo{display:block !important;order:99;break-before:auto}
+    /* Hinweis zur Berechnung und Import-Status auch im Druck anzeigen */
+    #pricingNote{display:block !important;color:#000 !important;font-size:10px}
+    #importSummary{color:#000 !important;font-size:10px}
   }
   .qbtn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:8px;border:0;border-radius:50%;background:var(--green,#2e8b57);color:#fff;font-weight:700;font-size:13px;cursor:pointer;vertical-align:middle;line-height:1}
   .qbtn:hover{filter:brightness(1.08)}
@@ -225,6 +228,7 @@
       </select>
       <span id="channelHint" style="color:#B00020;font-size:12px;display:none">Pflicht bei eigenem Preis / Stück</span>
     </div>
+    <div id="pricingNote" class="note" style="margin-top:8px"><b>Hinweis zur Berechnung:</b> Dieser Rechner rechnet immer mit aktuellen Microsoft Listenpreisen, es sei denn Sie haben individuelle Preise pro Position eingegeben und beziehen Ihre Produkte nicht über ein Enterprise Agreement.</div>
     <div class="print-only" style="font-size:10px;color:#000;margin:0 0 8px">Bitte EVP / Listenpreise eintragen, sofern der EVP oder 0 Wert nicht vorher überschrieben worden ist.</div>
     <div style="overflow-x:auto;border:1px solid var(--line);border-radius:10px;overflow:hidden">
     <table id="inTable">
@@ -247,7 +251,7 @@
       <button class="btn" style="background:#EEF0F3;color:var(--nachtblau)" onclick="clearRows()">Alle leeren</button>
       <button class="btn" style="background:var(--green);color:#fff" onclick="window.print()">🖨️ Als PDF drucken</button>
     </div>
-    <div id="importStatus" class="muted no-print" style="font-size:12.5px;margin-top:8px;display:none"></div>
+    <div id="importSummary" class="muted" style="font-size:12.5px;margin-top:8px;display:none"></div>
 
     <div id="sendPanel" class="no-print" style="margin-top:14px;padding:16px;border:1px solid #C3C9D2;border-radius:10px;background:#F7F8FA">
       <div style="font-weight:600;margin-bottom:8px">Auswertung an Dataciders senden</div>
@@ -537,7 +541,7 @@ function importPaste(replace){
   // Import abgeschlossen -> Panel wieder einklappen, Ergebnis dauerhaft anzeigen
   if(ok>0){
     document.getElementById('importBox').value='';
-    const st=document.getElementById('importStatus');
+    const st=document.getElementById('importSummary');
     st.innerHTML='✅ '+m;
     st.style.display='';
     document.getElementById('importPanel').style.display='none';
@@ -713,15 +717,9 @@ function calc(){
           rec=`🔄 Jahreslizenz mit Ablauf ≤ 30.06.2026: verlängert sich automatisch noch zum alten Preis — Jahr 1 nicht betroffen. Ein 3-Jahres-Commitment ist für dieses Produkt nicht verfügbar, daher kein zusätzlicher Lock-Vorteil.`;
         }
       } else {
-        const hasSaving = (lock1>0) || (lock3avail && lock3>0);
-        if(O===0 && r.exp){
-          rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
-        } else if(hasSaving){
-          const lock = (lock1>0 && lock3avail && lock3>0) ? '1J oder 3J möglich' : (lock3avail && lock3>0 ? 'nur 3J' : 'nur 1J in NCE');
-          rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
-        } else {
-          rec=`ℹ️ Derzeit kein Einsparpotenzial durch einen vorzeitigen Lock — der laufende Vertrag gilt noch zum alten Preis. Rechtzeitig vor Vertragsende erneut prüfen.`;
-        }
+        const lock = three ? '1J oder 3J möglich' : 'nur 1J in NCE';
+        rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
+        if(O===0 && r.exp) rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
       }
       if(monthly && !termMonthly) rec+=' ℹ️ Monatliche Abrechnung berücksichtigt (+5 % ggü. jährlicher Zahlung im Voraus).';
     }
