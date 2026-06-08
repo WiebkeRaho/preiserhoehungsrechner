@@ -737,9 +737,13 @@ function calc(){
           rec=`🔄 Jahreslizenz mit Ablauf ≤ 30.06.2026: verlängert sich automatisch noch zum alten Preis — Jahr 1 nicht betroffen. Ein 3-Jahres-Commitment ist für dieses Produkt nicht verfügbar, daher kein zusätzlicher Lock-Vorteil.`;
         }
       } else {
-        const lock = three ? '1J oder 3J möglich' : 'nur 1J in NCE';
-        rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
-        if(O===0 && r.exp) rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
+        if(sav <= 0){
+          rec = 'Vorzeitiger Preis Lock bringt keine Preisersparnis. Keine Empfehlung möglich.';
+        } else {
+          const lock = three ? '1J oder 3J möglich' : 'nur 1J in NCE';
+          rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
+          if(O===0 && r.exp) rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
+        }
       }
       if(monthly && !termMonthly) rec+=' ℹ️ Monatliche Abrechnung berücksichtigt (+5 % ggü. jährlicher Zahlung im Voraus).';
     }
