@@ -135,6 +135,12 @@
     /* Hinweis zur Berechnung und Import-Status auch im Druck anzeigen */
     #pricingNote{display:block !important;color:#000 !important;font-size:10px}
     #importSummary{color:#000 !important;font-size:10px}
+    /* Executive Summary: nur im Druck, gut lesbar, oberhalb von KPI und Tabelle, kein Grid-Zwang */
+    #printSummary{display:block !important;background:#f3f6f4;border:1px solid #d4d8de;border-radius:8px;padding:16px 18px;margin:0 0 16px;font-size:13px;line-height:1.65;color:#1b2733;break-inside:avoid;page-break-inside:avoid}
+    #printSummary h3{font-size:15px;margin:0 0 10px;color:#000}
+    #printSummary p{margin:7px 0}
+    #printSummary .ps-kern{font-weight:700;font-size:14px}
+    #printSummary #ps_detail{font-style:italic;color:#3a424b}
   }
   .qbtn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;margin-left:8px;border:0;border-radius:50%;background:var(--green,#2e8b57);color:#fff;font-weight:700;font-size:13px;cursor:pointer;vertical-align:middle;line-height:1}
   .qbtn:hover{filter:brightness(1.08)}
@@ -237,7 +243,7 @@
         <th>Vertragslaufzeit</th>
         <th>Abrechnungszyklus</th>
         <th>Ablaufdatum</th>
-        <th>Preis / Stück in €</th>
+        <th>Preis / Stück in €<br><span style="font-weight:400;color:#8A929B;font-size:11px">pro User · pro Jahr (Abozeitraum)</span></th>
         <th></th>
       </tr></thead>
       <tbody id="rows"></tbody>
@@ -314,6 +320,12 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
         <li><b>Max. Einsparpotenzial (Abschnitt 2):</b> Summe aller 1- bzw. 3-Jahres-Locks inkl. Monatslizenzen; in der Summenzeile (Abschnitt 3) ohne optionale Monatslizenzen.</li>
       </ul>
     </div>
+    <div id="printSummary" class="print-summary print-only">
+      <h3>Zusammenfassung Ihrer Lizenzanalyse</h3>
+      <p class="ps-kern" id="ps_kern"></p>
+      <p id="ps_basis"></p>
+      <p id="ps_detail">Details entnehmen Sie der nachfolgenden Aufstellung.</p>
+    </div>
     <div class="kpis">
       <!-- Zeile 1 (oben): aktuelle Kosten · Mehrkosten 1J · Einsparpotenzial 1J -->
       <div class="kpi"><div class="lbl">Aktuelle Lizenzkosten VOR dem 01.07.2026 (1 Jahr)</div><div class="val" id="k_now">–</div><div class="sub" id="k_count"></div></div>
@@ -360,12 +372,13 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
     <table>
       <thead><tr>
         <th>Produkt</th>
+        <th>Berechnungsbasis</th>
         <th class="num">Erhöhung</th>
         <th class="num">Einsparung 1 Jahr Preis-Lock</th>
         <th class="num">Einsparung 3 Jahre Preis-Lock</th>
         <th>Empfehlung</th>
       </tr></thead>
-      <tbody id="outRows"><tr><td colspan="5" class="muted">Noch keine Lizenzen eingetragen.</td></tr></tbody>
+      <tbody id="outRows"><tr><td colspan="6" class="muted">Noch keine Lizenzen eingetragen.</td></tr></tbody>
     </table>
     </div>
     <div class="note no-print">Details zur Berechnung über das <b>"?"</b> neben der Überschrift.</div>
@@ -423,6 +436,11 @@ const STICHTAG = new Date(2026,5,30); // 30.06.2026
 const DAY = 86400000;
 const eur = n => (isFinite(n)?n:0).toLocaleString('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0});
 const pct = n => (n*100).toLocaleString('de-DE',{maximumFractionDigits:0})+' %';
+// Robustes Parsen von Preis-Eingaben: behandelt deutsche Tausender-Punkte ("1.200" -> 1200)
+// und Dezimal-Komma ("1.200,50" -> 1200.50), lässt aber Dezimalpunkt ("600.50") unangetastet.
+function parseEuro(v){
+  return parseFloat((v||'').toString().replace(/[^0-9,.-]/g,'').replace(/\.(?=\d{3}\b)/g,'').replace(',','.'))||0;
+}
 
 // 3-Jahres-Vertrag verfügbar? (wie Excel: nicht bei Business / F1 / F3 / Copilot)
 function threeYearAvail(name){ return !/business| f1| f3|copilot/i.test(name); }
@@ -593,7 +611,7 @@ function readRow(tr){
     term:c[2].querySelector('select').value,
     bill:c[3].querySelector('select').value,
     exp:c[4].querySelector('input').value,
-    evpCustom:parseFloat((c[5].querySelector('input').value||'').replace(',','.'))||0
+    evpCustom:parseEuro(c[5].querySelector('input').value)
   };
 }
 
@@ -620,6 +638,7 @@ function calc(){
   let sumLock1=0, sumLock3=0;   // KPI-Summen Abschnitt 2 (inkl. Monatslizenzen)
   let sumRow1=0, sumRow3=0;     // Summenzeile Abschnitt 3 (OHNE optionale Monatslizenzen)
   let sumOverlap=0;             // Überlappungskosten (Brückenlizenz) für alle betroffenen Lizenzen mit O>0
+  let hasCustomPricing=false;   // mind. eine Position mit individuellem Preis (für Executive Summary)
   let notAff=[];                // nicht betroffene Lizenzen (für Druck-Hinweis)
   let out='';
   trs.forEach(tr=>{
@@ -632,6 +651,9 @@ function calc(){
     // auf den die relativen Preiserhöhungen angewendet werden; bei EA gilt der Listenpreis (EVP).
     const useCustom = (ekAllowed && r.evpCustom>0);
     const base = useCustom ? r.evpCustom : p.evp;
+    // Berechnungsbasis dieser Position: EA → immer Listenpreis; CSP/webdirect → individuell wenn Preis gesetzt, sonst Listenpreis
+    const pricingSource = (channel==='EA') ? 'Listenpreis (EA)' : (useCustom ? 'Individueller Preis' : 'Listenpreis');
+    if(pricingSource==='Individueller Preis') hasCustomPricing=true;
     const monthly = r.bill==='monatlich';
     const MF = monthly ? 1.05 : 1;             // monatliche Abrechnung = +5 % ggü. jährl. im Voraus
     const F=base*MF;                           // effektiver Jahres-EVP (Liste oder eingetragener Preis)
@@ -724,8 +746,15 @@ function calc(){
     // Vor jedem weiteren Icon eine neue Zeile beginnen
     rec = rec.replace(/\s+(💶|ℹ️|🎯|🔄|✅)/g, '<br>$1');
 
+    // Plausibilitäts-Warnung: individueller Preis liegt über dem Listenpreis (EVP) –
+    // meist versehentlich ein Monats- oder 3-Jahres-Preis statt des Jahrespreises pro User.
+    if(useCustom && r.evpCustom > p.evp){
+      rec += `<br><span style="color:var(--himbeer);font-weight:600">⚠️ Achtung: Ihr eingetragener Preis (${eur(r.evpCustom)}) liegt über dem Listenpreis (EVP ${eur(p.evp)}). Bitte als Preis <b>pro User pro Jahr</b> eintragen – nicht den Monats- oder 3-Jahres-Preis.</span>`;
+    }
+
     out+=`<tr>
       <td>${r.prod}<br><span style="font-style:italic;color:#8A929B;font-size:12px">${termLabel}</span></td>
+      <td>${pricingSource}</td>
       <td class="num">${betroffen?'<b style="color:var(--himbeer)">'+pct(inc)+'</b>':'–'}</td>
       <td class="num">${betroffen ? (lock1>0?eur(lock1)+(termMonthly?' <span style="color:#8A929B;font-size:11px">(optional)</span>':''):'keine') : '–'}</td>
       <td class="num">${betroffen ? (lock3avail ? (lock3>0?eur(lock3)+(termMonthly?' <span style="color:#8A929B;font-size:11px">(optional)</span>':''):'keine') : '–') : '–'}</td>
@@ -737,6 +766,7 @@ function calc(){
   if(out){
     out+=`<tr style="border-top:2px solid var(--line);font-weight:700;background:#F4F6F8;font-size:13px">
       <td style="padding:6px 8px"><span style="white-space:nowrap">Summe Einsparpotenzial</span><br><span style="font-style:italic;font-weight:400;color:#8A929B;font-size:11px">(ohne optional)</span></td>
+      <td style="padding:6px 8px"></td>
       <td class="num" style="padding:6px 8px">–</td>
       <td class="num" style="padding:6px 8px">${eur(sumRow1)}</td>
       <td class="num" style="padding:6px 8px">${eur(sumRow3)}</td>
@@ -760,9 +790,25 @@ function calc(){
   } else {
     ovEl.style.display='none';
   }
-  document.getElementById('outRows').innerHTML = out || '<tr><td colspan="5" class="muted">Noch keine gültigen Lizenzen eingetragen.</td></tr>';
+  document.getElementById('outRows').innerHTML = out || '<tr><td colspan="6" class="muted">Noch keine gültigen Lizenzen eingetragen.</td></tr>';
   const naEl=document.getElementById('printAffList');
   if(naEl) naEl.textContent = notAff.length ? [...new Set(notAff)].join(', ') : 'keine';
+
+  // Executive Summary (Druck): verwendet bestehende KPI-Werte – keine Doppelberechnung
+  const psKern=document.getElementById('ps_kern');
+  const psBasis=document.getElementById('ps_basis');
+  if(psKern && psBasis){
+    if(sumLock1>0){
+      psKern.textContent='Durch Anpassung Ihrer Lizenzstrategie ergibt sich ein Einsparpotenzial von '+eur(sumLock1)+' jährlich.';
+    } else if(extra1>0){
+      psKern.textContent='Basierend auf Ihren aktuellen Lizenzdaten ergibt sich durch die Microsoft Preisanpassung ein jährlicher Mehrpreis von '+eur(extra1)+'.';
+    } else {
+      psKern.textContent='Für die eingetragenen Lizenzen ergeben sich aktuell weder Mehrkosten noch ein Einsparpotenzial.';
+    }
+    psBasis.textContent = hasCustomPricing
+      ? 'Die Berechnung basiert teilweise auf Ihren individuellen Lizenzpreisen.'
+      : 'Die Berechnung basiert vollständig auf Microsoft Listenpreisen.';
+  }
 }
 
 // Countdown
