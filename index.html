@@ -401,12 +401,12 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
 
 <script>
 const PRICES = {
- "Microsoft 365 E3":{evp:418.8,inc:0.08},
- "Microsoft 365 E5":{evp:662.4,inc:0.05},
+ "Microsoft 365 E3":{evp:418.8,inc:0.08,min3y:100},
+ "Microsoft 365 E5":{evp:662.4,inc:0.05,min3y:100},
  "Office 365 E3":{evp:278.4,inc:0.13},
  "Office 365 E5":{evp:460.8,inc:0.08},
- "Microsoft 365 E3 EEA (no Teams)":{evp:330,inc:0.11},
- "Microsoft 365 E5 EEA (no Teams)":{evp:574.8,inc:0.06},
+ "Microsoft 365 E3 EEA (no Teams)":{evp:330,inc:0.11,min3y:100},
+ "Microsoft 365 E5 EEA (no Teams)":{evp:574.8,inc:0.06,min3y:100},
  "Office 365 E3 EEA (no Teams)":{evp:189.6,inc:0.14},
  "Office 365 E5 EEA (no Teams)":{evp:372,inc:0.10},
  "Microsoft 365 Business Basic":{evp:62.4,inc:0.16},
@@ -637,7 +637,8 @@ function calc(){
   let sumNow=0,sumNew=0,extra1=0,extra3=0,save=0, nAff=0, n=0;
   let sumLock1=0, sumLock3=0;   // KPI-Summen Abschnitt 2 (inkl. Monatslizenzen)
   let sumRow1=0, sumRow3=0;     // Summenzeile Abschnitt 3 (OHNE optionale Monatslizenzen)
-  let sumOverlap=0;             // Überlappungskosten (Brückenlizenz) für alle betroffenen Lizenzen mit O>0
+  let sumOverlap1=0;            // Überlappungskosten bei 1-Jahres-Lock  (Bridge = 1 Seat je Produkt)
+  let sumOverlap3=0;            // Überlappungskosten bei 3-Jahres-Lock  (Bridge = min3y Seats für E3/E5, sonst 1)
   let hasCustomPricing=false;   // mind. eine Position mit individuellem Preis (für Executive Summary)
   let notAff=[];                // nicht betroffene Lizenzen (für Druck-Hinweis)
   let out='';
@@ -660,7 +661,14 @@ function calc(){
     const AF=1;                                // Faktor 1; der individuelle Preis steckt bereits in base
     const H=F*(1+inc);                         // neuer EVP/Jahr
     const betroffen = inc>0;
-    const three = threeYearAvail(r.prod);
+    const threeNative = threeYearAvail(r.prod);
+    const minSeats3Y = p.min3y || 0;                          // Mindestabnahme für 3-Jahres-Vertrag (0 = kein Minimum)
+    const threeBlockedByMOQ = threeNative && minSeats3Y > 0 && r.qty < minSeats3Y;
+    const three = threeNative && !threeBlockedByMOQ;           // true nur wenn Produkt + Menge 3J zulassen
+    // Bridge-Mindestmenge: für 1J-Lock gilt immer 1 Seat (keine MOQ in NCE Jahresvertrag).
+    // Für 3J-Lock gilt die Mindestabnahme (min3y), z.B. 100 für M365 E3/E5.
+    const bridgeB1 = 1;                   // 1-Jahres-Lock: immer 1 Seat Bridge
+    const bridgeB3 = minSeats3Y || 1;     // 3-Jahres-Lock: min3y Seats (z.B. 100), sonst 1
     const termMonthly = (r.term==='1 Monat');
     const termLabel = r.term || '1 Jahr';
 
@@ -686,10 +694,10 @@ function calc(){
     // (bewusst monatlich gebucht = Flexibilität; ein erzwungenes Commitment wäre keine echte Ersparnis)
     let sav=0, savLabel='', savMonthly=0, lock1=0, lock3=0, lock3avail=false;
     if(betroffen){
-      const AG = F*AF*B + (F*AF/365)*O;                                  // SICHERN 1J
+      const AG = F*AF*B + (F*AF/365)*O*bridgeB1;                          // SICHERN 1J (Bridge = 1 Seat, keine MOQ)
       const AH = (F*AF/365)*O*B + (H*AF/365)*Math.max(0,365-O)*B;        // BLEIBEN 1J
       const AI = AH-AG;                                                  // Preis-Lock 1 Jahr (roh, kann negativ sein)
-      const AJ = F*AF*3*B + (F*AF/365)*O;                               // SICHERN 3J
+      const AJ = F*AF*3*B + (F*AF/365)*O*bridgeB3;                       // SICHERN 3J (Bridge = min3y Seats)
       const AK = (F*AF/365)*O*B + (H*AF/365)*Math.max(0,1095-O)*B;       // BLEIBEN 3J
       const AL = AK-AJ;                                                  // Preis-Lock 3 Jahre (roh)
       let best, bestLabel;
@@ -707,7 +715,10 @@ function calc(){
       sav=best; savLabel=bestLabel;
       save+=sav;
       // Überlappungskosten: immer nur EINE Brückenlizenz (nicht × Menge), O Tage parallel zum alten Preis
-      if(O>0) sumOverlap += (F*AF/365)*O;
+      if(O>0){
+        sumOverlap1 += (F*AF/365)*O*bridgeB1;                                    // 1J: immer 1 Seat
+        sumOverlap3 += (F*AF/365)*O * (three ? bridgeB3 : bridgeB1);             // 3J: min3y wo 3J buchbar, sonst 1
+      }
       // KPI-Summen Abschnitt 2: Monatslizenzen zählen mit
       if(lock1>0) sumLock1+=lock1;
       if(lock3avail && lock3>0) sumLock3+=lock3;
@@ -728,11 +739,17 @@ function calc(){
     } else {
       badge='<span class="badge b-yes">⚠️ JA</span>';
       if(termMonthly){
-        const mLauf = three ? '1 oder 3 Jahre Laufzeit (3 Jahre nur bei Enterprise-Plänen)' : '1 Jahr Laufzeit (3-Jahres-Verträge nur bei Enterprise-Plänen verfügbar)';
+        const mLauf = three
+          ? '1 oder 3 Jahre Laufzeit (3 Jahre nur bei Enterprise-Plänen)'
+          : threeBlockedByMOQ
+            ? `1 oder 3 Jahre Laufzeit (3-Jahres-Vertrag erst ab ${minSeats3Y} Lizenzen; aktuell: ${r.qty})`
+            : '1 Jahr Laufzeit (3-Jahres-Verträge nur bei Enterprise-Plänen verfügbar)';
         rec=`⚠️ Preiserhöhung greift sofort. Sicherung des alten Preises (Einsparungen) nur durch Aufgabe der Flexibilität gegen ${mLauf} möglich.`;
       } else if(autoRenewOld){
         if(three){
           rec=`🔄 Jahreslizenz mit Ablauf ≤ 30.06.2026: verlängert sich automatisch noch zum alten Preis — Jahr 1 nicht betroffen, daher keine 1-Jahres-Ersparnis. 🎯 Mit einem 3-Jahres-Lock vor dem 30.06.2026 lässt sich die Erhöhung in Jahr 2+3 vermeiden.`;
+        } else if(threeBlockedByMOQ){
+          rec=`🔄 Jahreslizenz mit Ablauf ≤ 30.06.2026: verlängert sich automatisch noch zum alten Preis — Jahr 1 nicht betroffen. ℹ️ 3-Jahres-Lock wäre möglich, erfordert jedoch mindestens ${minSeats3Y} Lizenzen (aktuell: ${r.qty}).`;
         } else {
           rec=`🔄 Jahreslizenz mit Ablauf ≤ 30.06.2026: verlängert sich automatisch noch zum alten Preis — Jahr 1 nicht betroffen. Ein 3-Jahres-Commitment ist für dieses Produkt nicht verfügbar, daher kein zusätzlicher Lock-Vorteil.`;
         }
@@ -740,8 +757,14 @@ function calc(){
         if(sav <= 0){
           rec = 'Vorzeitiger Preis Lock bringt keine Preisersparnis. Keine Empfehlung möglich.';
         } else {
-          const lock = three ? '1J oder 3J möglich' : 'nur 1J in NCE';
+          const lock = three
+            ? (lock1 > 0 && lock3 > 0 ? '1J oder 3J möglich'
+              : lock3 > 0              ? 'nur 3J lohnend — 1J-Bridge-Kosten überwiegen'
+              :                          '1J möglich')
+            : threeBlockedByMOQ ? `1J möglich; 3J erst ab ${minSeats3Y} Lizenzen (aktuell: ${r.qty})`
+            : 'nur 1J in NCE';
           rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
+          if(threeBlockedByMOQ && !lock.includes('3J erst')) rec+=` ℹ️ 3-Jahres-Vertrag erst ab ${minSeats3Y} Lizenzen buchbar (aktuell: ${r.qty}).`;
           if(O===0 && r.exp) rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
         }
       }
@@ -788,9 +811,17 @@ function calc(){
   document.getElementById('k_aff').textContent='für '+nAff+' betroffene Abonnement'+(nAff===1?'':'s');
   document.getElementById('k_savesub').textContent = sumNow>0 ? '≈ '+pct(sumLock3/sumNow)+' der Jahreslizenzkosten' : '';
   const ovEl=document.getElementById('overlapNote');
-  if(sumOverlap>0){
+  if(sumOverlap1>0){
     ovEl.style.display='';
-    ovEl.innerHTML='🔗 <b>Überlappungskosten (Brückenlizenzen kumuliert): '+eur(sumOverlap)+'</b> — eine Brücke je vorzeitig zu verlängerndem Produkt, in den Einsparpotenzialen bereits gegengerechnet.';
+    if(sumOverlap3 !== sumOverlap1){
+      // Unterschiedliche Bridge-Kosten je nach Lock-Typ (z.B. M365 E3/E5 mit min3y=100)
+      ovEl.innerHTML=
+        '🔗 <b>Überlappungskosten (Brückenlizenzen kumuliert)</b> — je nach gewähltem Preis-Lock unterschiedlich, in den Einsparpotenzialen bereits gegengerechnet.<br>'
+        +'&nbsp;&nbsp;• <b>1-Jahres-Lock:</b> '+eur(sumOverlap1)+' (je 1 Seat pro Produkt)<br>'
+        +'&nbsp;&nbsp;• <b>3-Jahres-Lock:</b> '+eur(sumOverlap3)+' (Mindestabnahme berücksichtigt)';
+    } else {
+      ovEl.innerHTML='🔗 <b>Überlappungskosten (Brückenlizenzen kumuliert): '+eur(sumOverlap1)+'</b> — eine Brücke je vorzeitig zu verlängerndem Produkt, in den Einsparpotenzialen bereits gegengerechnet.';
+    }
   } else {
     ovEl.style.display='none';
   }
