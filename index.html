@@ -305,6 +305,7 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
         <li><b>Brückenlizenz / Überlappungskosten:</b> Wird ein Vertrag vorzeitig verlängert, entsteht eine Überlappung zur Restlaufzeit. Die Berechnung erfolgt immer vom 30.06. bis zum Ablaufdatum für ein Stück (eine Brücke je vorzeitig zu verlängerndem Produkt) zum alten Preis — damit SICHERN und BLEIBEN fair vergleichbar sind. In Abschnitt 2 werden alle Brückenlizenzen kumuliert ausgewiesen.</li>
         <li><b>Einsparung 1 Jahr Preis-Lock:</b> TCO-Vergleich SICHERN vs. BLEIBEN über ein 12-Monats-Fenster.</li>
         <li><b>Einsparung 3 Jahre Preis-Lock:</b> TCO-Vergleich über ein 36-Monats-Fenster (nur wo ein 3-Jahres-Commitment verfügbar ist).</li>
+        <li><b>Term-Upgrade (Proration):</b> Das Term-Upgrade wird ausgewiesen, sobald es den klassischen 3-Jahres-Lock <b>schlägt</b> — also immer dann, wenn eine Überlappung besteht (Restlaufzeit O &gt; 0). Bei einem Midterm-Term-Upgrade entfällt die Überlappung: Microsoft schreibt die ungenutzte Restlaufzeit per <b>Proration</b> gut, statt zwei Verträge parallel laufen zu lassen. Die Preiserhöhung wird trotzdem vermieden. Upgrade-Vorteil = vermiedene Erhöhung der Restjahre ohne Brücke = (<i>H</i> − <i>F</i>) × <i>B</i> × (1.095 − <i>O</i>) ÷ 365 = <i>3-Jahres-Lock + weggefallene Brücke</i>. Anzeige je Position: Zeile 1 zeigt den Preis-Lock-Wert (bzw. „kein Lock"), Zeile 2 den Term-Upgrade-Vorteil mit „Brücke entfällt". Die Kachel in Abschnitt 2 summiert die <b>vollen</b> Term-Upgrade-Vorteile aller betroffenen Positionen — sie ist eine <b>Alternative</b> zum 3-Jahres-Lock und nicht zum Lock-KPI zu addieren. Greift nur bei betroffenen Jahres-/Mehrjahreslizenzen mit verfügbarem 3-Jahres-Vertrag.</li>
         <li><b>Monatslizenzen:</b> die Erhöhung greift sofort. Eine rechnerische Ersparnis durch Wechsel auf 1-/3-Jahres-Commitment wird nur informativ in Klammern gezeigt und fließt nicht ins Max-Einsparpotential ein.</li>
         <li><b>Jahreslizenzen mit Ablauf ≤ 30.06.2026:</b> verlängern sich automatisch noch zum alten Preis — daher keine 1-Jahres-Ersparnis, aber ein 3-Jahres-Lock kann die Erhöhung in den Folgejahren vermeiden.</li>
         <li><b>Promos</b> sind kundenspezifisch und nicht enthalten — Prüfung im Beratungsgespräch.</li>
@@ -335,6 +336,12 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
       <div class="kpi"><div class="lbl">Renewal-Kosten AB dem 01.07.2026 (1 Jahr)</div><div class="val" id="k_new">–</div><div class="sub" id="k_aff"></div></div>
       <div class="kpi bad"><div class="lbl">Hochrechnung der Mehrkosten auf 3 Jahre</div><div class="val" id="k_extra3">–</div><div class="sub">Min. Folgekosten über drei Jahre — unter der Annahme, dass die Preise in den nächsten drei Jahren nicht nochmal steigen.</div></div>
       <div class="kpi good"><div class="lbl" style="white-space:nowrap">Max. Einsparpotenzial 3 Jahre (Zeitraum BIS 29.06.2029)</div><div class="val" id="k_save">–</div><div class="sub" id="k_savesub"></div><div class="sub">Summe aller 1- und 3-Jahres-Sicherungen BIS 30.06.2026</div></div>
+      <!-- Zusatz-Kachel: Einsparpotenzial via Term-Upgrade, nur sichtbar wenn ein klassischer 3J-Lock nicht trägt -->
+      <div class="kpi good" id="upgradeTile" style="grid-column:1 / -1;display:none">
+        <div class="lbl">🔁 Einsparpotenzial via Term-Upgrade (gesamt) — Summe aller Term-Upgrade-Vorteile, Brücke entfällt durch Proration. Alternative zum 3-Jahres-Lock (nicht zum Lock-KPI addieren).</div>
+        <div class="val" id="k_upgrade">–</div>
+        <div class="sub" id="k_upgrade_sub"></div>
+      </div>
     </div>
     <div id="overlapNote" class="note" style="margin-top:14px;display:none"></div>
   </div>
@@ -353,6 +360,7 @@ Microsoft 365 E3&#9;50&#9;3 Jahre&#9;jährlich im Voraus&#9;30.09.2026"></textar
         <li><b>Brückenlizenz / Überlappungskosten:</b> Wird ein Vertrag vorzeitig verlängert, entsteht eine Überlappung zur Restlaufzeit. Die Berechnung erfolgt immer vom 30.06. bis zum Ablaufdatum für ein Stück (eine Brücke je vorzeitig zu verlängerndem Produkt) zum alten Preis — damit SICHERN und BLEIBEN fair vergleichbar sind. In Abschnitt 2 werden alle Brückenlizenzen kumuliert ausgewiesen.</li>
         <li><b>Einsparung 1 Jahr Preis-Lock:</b> TCO-Vergleich SICHERN vs. BLEIBEN über ein 12-Monats-Fenster.</li>
         <li><b>Einsparung 3 Jahre Preis-Lock:</b> TCO-Vergleich über ein 36-Monats-Fenster (nur wo ein 3-Jahres-Commitment verfügbar ist).</li>
+        <li><b>Term-Upgrade (Proration):</b> Das Term-Upgrade wird ausgewiesen, sobald es den klassischen 3-Jahres-Lock <b>schlägt</b> — also immer dann, wenn eine Überlappung besteht (Restlaufzeit O &gt; 0). Bei einem Midterm-Term-Upgrade entfällt die Überlappung: Microsoft schreibt die ungenutzte Restlaufzeit per <b>Proration</b> gut, statt zwei Verträge parallel laufen zu lassen. Die Preiserhöhung wird trotzdem vermieden. Upgrade-Vorteil = vermiedene Erhöhung der Restjahre ohne Brücke = (<i>H</i> − <i>F</i>) × <i>B</i> × (1.095 − <i>O</i>) ÷ 365 = <i>3-Jahres-Lock + weggefallene Brücke</i>. Anzeige je Position: Zeile 1 zeigt den Preis-Lock-Wert (bzw. „kein Lock"), Zeile 2 den Term-Upgrade-Vorteil mit „Brücke entfällt". Die Kachel in Abschnitt 2 summiert die <b>vollen</b> Term-Upgrade-Vorteile aller betroffenen Positionen — sie ist eine <b>Alternative</b> zum 3-Jahres-Lock und nicht zum Lock-KPI zu addieren. Greift nur bei betroffenen Jahres-/Mehrjahreslizenzen mit verfügbarem 3-Jahres-Vertrag.</li>
         <li><b>Monatslizenzen:</b> die Erhöhung greift sofort. Eine rechnerische Ersparnis durch Wechsel auf 1-/3-Jahres-Commitment wird nur informativ in Klammern gezeigt und fließt nicht ins Max-Einsparpotential ein.</li>
         <li><b>Jahreslizenzen mit Ablauf ≤ 30.06.2026:</b> verlängern sich automatisch noch zum alten Preis — daher keine 1-Jahres-Ersparnis, aber ein 3-Jahres-Lock kann die Erhöhung in den Folgejahren vermeiden.</li>
         <li><b>Promos</b> sind kundenspezifisch und nicht enthalten — Prüfung im Beratungsgespräch.</li>
@@ -639,6 +647,7 @@ function calc(){
   let sumRow1=0, sumRow3=0;     // Summenzeile Abschnitt 3 (OHNE optionale Monatslizenzen)
   let sumOverlap1=0;            // Überlappungskosten bei 1-Jahres-Lock  (Bridge = 1 Seat je Produkt)
   let sumOverlap3=0;            // Überlappungskosten bei 3-Jahres-Lock  (Bridge = min3y Seats für E3/E5, sonst 1)
+  let sumUpgrade3=0, nUpgrade=0, upgradeRows=[]; // Term-Upgrade: Summe + Aufschlüsselung je Position
   let hasCustomPricing=false;   // mind. eine Position mit individuellem Preis (für Executive Summary)
   let notAff=[];                // nicht betroffene Lizenzen (für Druck-Hinweis)
   let out='';
@@ -693,6 +702,7 @@ function calc(){
     // Monatslizenzen: Einsparung wird NUR nachrichtlich angezeigt, fließt NICHT ins Max-Einsparpotential
     // (bewusst monatlich gebucht = Flexibilität; ein erzwungenes Commitment wäre keine echte Ersparnis)
     let sav=0, savLabel='', savMonthly=0, lock1=0, lock3=0, lock3avail=false;
+    let upgrade3=0, upgradeAvail=false;   // Term-Upgrade-Alternative (Proration statt Brücke), wenn 3J-Lock ≤ 0
     if(betroffen){
       const AG = F*AF*B + (F*AF/365)*O*bridgeB1;                          // SICHERN 1J (Bridge = 1 Seat, keine MOQ)
       const AH = (F*AF/365)*O*B + (H*AF/365)*Math.max(0,365-O)*B;        // BLEIBEN 1J
@@ -700,6 +710,13 @@ function calc(){
       const AJ = F*AF*3*B + (F*AF/365)*O*bridgeB3;                       // SICHERN 3J (Bridge = min3y Seats)
       const AK = (F*AF/365)*O*B + (H*AF/365)*Math.max(0,1095-O)*B;       // BLEIBEN 3J
       const AL = AK-AJ;                                                  // Preis-Lock 3 Jahre (roh)
+      // ── Term-Upgrade-Alternative ──────────────────────────────────────────────
+      // Scheitert der reine 3-Jahres-Lock an der Brücke/Überlappung, entfällt diese
+      // beim Midterm-Term-Upgrade: Microsoft schreibt die ungenutzte Restlaufzeit per
+      // Proration gut (kein Parallel-Lauf). Verbleibender Vorteil = vermiedene Erhöhung
+      // der Restjahre OHNE Brückenkosten = (H − F)·B·(1095 − O)/365.
+      const AJupg = F*AF*3*B;                                            // SICHERN 3J OHNE Brücke (Proration)
+      upgrade3 = AK - AJupg;                                             // = (H−F)·B·(1095−O)/365 → ≥ 0 für betroffene
       let best, bestLabel;
       if(autoRenewOld){
         lock1=0;                                       // automatische Verlängerung zum alten Preis → keine 1J-Ersparnis
@@ -714,6 +731,13 @@ function calc(){
       }
       sav=best; savLabel=bestLabel;
       save+=sav;
+      // Upgrade ausweisen, sobald es den klassischen 3-Jahres-Lock SCHLÄGT (Brücke entfällt
+      // per Proration). Greift sowohl wenn der Lock ≤ 0 ist als auch wenn er positiv, das
+      // Upgrade aber besser ist (immer, sobald Überlappung O > 0 vorliegt). upgrade3 = lock3 + Brücke.
+      upgradeAvail = three && !autoRenewOld && !termMonthly && upgrade3 > 0 && upgrade3 > lock3 + 0.005;
+      // Kachel: Summe der VOLLEN Term-Upgrade-Vorteile (= Lock + weggefallene Brücke).
+      // Bewusst eine Alternative zum 3-Jahres-Lock — nicht zum Lock-KPI addieren.
+      if(upgradeAvail){ const u=Math.round(upgrade3); sumUpgrade3 += u; nUpgrade++; upgradeRows.push({prod:r.prod, qty:r.qty, exp:r.exp, val:u}); }  // je Position runden → Kachel = Summe der angezeigten Werte
       // Überlappungskosten: immer nur EINE Brückenlizenz (nicht × Menge), O Tage parallel zum alten Preis
       if(O>0){
         sumOverlap1 += (F*AF/365)*O*bridgeB1;                                    // 1J: immer 1 Seat
@@ -755,7 +779,11 @@ function calc(){
         }
       } else {
         if(sav <= 0){
-          rec = 'Vorzeitiger Preis Lock bringt keine Preisersparnis. Keine Empfehlung möglich.';
+          if(upgradeAvail){
+            rec = `🔁 Ein klassischer 3-Jahres-Lock lohnt sich hier nicht — die Brücken-/Überlappungskosten überwiegen. 🎯 Über ein Term-Upgrade (Midterm) entfällt die Überlappung: Microsoft schreibt die Restlaufzeit per Proration gut, die Preiserhöhung wird trotzdem vermieden. 💶 Rechnerischer Vorteil ${eur(upgrade3)} über drei Jahre (ohne Brückenkosten).`;
+          } else {
+            rec = 'Vorzeitiger Preis Lock bringt keine Preisersparnis. Keine Empfehlung möglich.';
+          }
         } else {
           const lock = three
             ? (lock1 > 0 && lock3 > 0 ? '1J oder 3J möglich'
@@ -766,6 +794,7 @@ function calc(){
           rec=`🎯 Vorzeitiger Preis-Lock empfohlen (${lock}).`;
           if(threeBlockedByMOQ && !lock.includes('3J erst')) rec+=` ℹ️ 3-Jahres-Vertrag erst ab ${minSeats3Y} Lizenzen buchbar (aktuell: ${r.qty}).`;
           if(O===0 && r.exp) rec=`🎯 Vertragsende ≤ 30.06.2026 — jetzt zum aktuellen Preis verlängern und Erhöhung vermeiden.`;
+          if(upgradeAvail) rec+=` 🔁 Noch günstiger per Term-Upgrade: ${eur(upgrade3)} über 3 Jahre, da die Brücke per Proration entfällt (+${eur(upgrade3-Math.max(0,lock3))} ggü. dem Lock).`;
         }
       }
       if(monthly && !termMonthly) rec+=' ℹ️ Monatliche Abrechnung berücksichtigt (+5 % ggü. jährlicher Zahlung im Voraus).';
@@ -779,12 +808,31 @@ function calc(){
       rec += `<br><span style="color:var(--himbeer);font-weight:600">⚠️ Achtung: Ihr eingetragener Preis (${eur(r.evpCustom)}) liegt über dem Listenpreis (EVP ${eur(p.evp)}). Bitte als Preis <b>pro User pro Jahr</b> eintragen – nicht den Monats- oder 3-Jahres-Preis.</span>`;
     }
 
+    // Anzeige 3-Jahres-Spalte – immer zweizeilig:
+    //   Zeile 1 (schwarz/grau): Preis-Lock-Wert bzw. "kein Lock"
+    //   Zeile 2 (grün):         Term-Upgrade-Vorteil + "Brücke entfällt" (falls verfügbar)
+    let cell3;
+    if(!betroffen || !lock3avail){
+      cell3='–';
+    } else {
+      const line1 = lock3>0
+        ? eur(lock3)+(termMonthly?' <span style="color:#8A929B;font-size:11px">(optional)</span>':'')
+        : '<span style="color:#8A929B">kein Lock</span>';
+      if(upgradeAvail){
+        cell3 = line1 + '<br><b style="color:var(--green)">'+eur(upgrade3)+'</b> <span style="color:var(--green);font-size:11px">via Term-Upgrade · Brücke entfällt</span>';
+      } else if(lock3>0){
+        cell3 = line1;
+      } else {
+        cell3 = 'keine';
+      }
+    }
+
     out+=`<tr>
       <td>${r.prod}<br><span style="font-style:italic;color:#8A929B;font-size:12px">${termLabel}</span></td>
       <td>${pricingSource}</td>
       <td class="num">${betroffen?'<b style="color:var(--himbeer)">'+pct(inc)+'</b>':'–'}</td>
       <td class="num">${betroffen ? (lock1>0?eur(lock1)+(termMonthly?' <span style="color:#8A929B;font-size:11px">(optional)</span>':''):'keine') : '–'}</td>
-      <td class="num">${betroffen ? (lock3avail ? (lock3>0?eur(lock3)+(termMonthly?' <span style="color:#8A929B;font-size:11px">(optional)</span>':''):'keine') : '–') : '–'}</td>
+      <td class="num">${cell3}</td>
       <td class="rec">${rec}</td>
     </tr>`;
   });
@@ -810,6 +858,21 @@ function calc(){
   document.getElementById('k_count').textContent='für '+nAff+' betroffene Abonnement'+(nAff===1?'':'s');
   document.getElementById('k_aff').textContent='für '+nAff+' betroffene Abonnement'+(nAff===1?'':'s');
   document.getElementById('k_savesub').textContent = sumNow>0 ? '≈ '+pct(sumLock3/sumNow)+' der Jahreslizenzkosten' : '';
+  // Zusatz-Kachel Term-Upgrade: nur anzeigen, wenn mind. eine Position davon profitiert
+  const upTile=document.getElementById('upgradeTile');
+  if(upTile){
+    if(sumUpgrade3>0){
+      document.getElementById('k_upgrade').textContent=eur(sumUpgrade3);
+      const shortName = s => s.replace(/^Microsoft 365 /,'M365 ').replace(/^Office 365 /,'O365 ');
+      const fmtExp = e => e ? e.split('-').reverse().join('.') : '';
+      document.getElementById('k_upgrade_sub').innerHTML = nUpgrade>1
+        ? 'über 3 Jahre = '+upgradeRows.map(x=>eur(x.val)+' <span style="color:#8A929B">('+shortName(x.prod)+' · '+x.qty+' Liz.'+(x.exp?' · '+fmtExp(x.exp):'')+')</span>').join(' + ')
+        : 'über 3 Jahre · Term-Upgrade-Vorteil dieser Position';
+      upTile.style.display='';
+    } else {
+      upTile.style.display='none';
+    }
+  }
   const ovEl=document.getElementById('overlapNote');
   if(sumOverlap1>0){
     ovEl.style.display='';
