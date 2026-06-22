@@ -688,6 +688,9 @@ function calc(){
     // Jahreslizenz mit Ablauf ≤ 30.06.2026: erneuert automatisch noch zum ALTEN Preis (Jahr 1 nicht betroffen).
     // Keine 1-Jahres-Ersparnis; ein 3-Jahres-Lock vermeidet die Erhöhung nur in Jahr 2+3.
     const autoRenewOld = (termLabel==='1 Jahr') && !!r.exp && O===0;
+    // Bereits laufende 3-Jahres-SKU mit > 1 Jahr Restlaufzeit ab Stichtag:
+    // der alte Preis ist für die gesamte Restlaufzeit ohnehin gesichert.
+    const existing3yLong = (termLabel==='3 Jahre') && !!r.exp && O > 365;
 
     const costNow = F*AF*B;                     // aktuelle Kosten/Jahr
     const costNew = betroffen ? H*AF*B : costNow;
@@ -726,7 +729,10 @@ function calc(){
         bestLabel = '3-Jahres-Wert';
       } else {
         lock1=AI; lock3=AL; lock3avail=three;
-        best = three ? Math.max(0,AL) : Math.max(0,AI);
+        // Läuft bereits eine 3-Jahres-SKU mit > 1 Jahr Restlaufzeit, ist der alte Preis für
+        // diese Zeit schon gesichert → ein 1-Jahres-Preislock erzeugt keine zusätzliche Ersparnis.
+        if(existing3yLong) lock1=0;
+        best = three ? Math.max(0,AL) : Math.max(0,lock1);
         bestLabel = three ? '3-Jahres-Wert' : '1-Jahres-Wert';
       }
       sav=best; savLabel=bestLabel;
@@ -734,7 +740,10 @@ function calc(){
       // Upgrade ausweisen, sobald es den klassischen 3-Jahres-Lock SCHLÄGT (Brücke entfällt
       // per Proration). Greift sowohl wenn der Lock ≤ 0 ist als auch wenn er positiv, das
       // Upgrade aber besser ist (immer, sobald Überlappung O > 0 vorliegt). upgrade3 = lock3 + Brücke.
-      upgradeAvail = three && !autoRenewOld && !termMonthly && upgrade3 > 0 && upgrade3 > lock3 + 0.005;
+      // Bezugsweg EA: KEIN Term-Upgrade möglich – ein laufender EA müsste dafür erst beendet werden.
+      // CSP kann bei vorhandenem EA nur zusätzlich lizenziert werden; ob sich das mit den Mindest-
+      // Stückzahlen der 3-Jahres-Lizenzen lohnt, zeigt bereits der reguläre 3-Jahres-Lock. Daher Upgrade hier raus.
+      upgradeAvail = channel!=='EA' && three && !autoRenewOld && !termMonthly && upgrade3 > 0 && upgrade3 > lock3 + 0.005;
       // Kachel: Summe der VOLLEN Term-Upgrade-Vorteile (= Lock + weggefallene Brücke).
       // Bewusst eine Alternative zum 3-Jahres-Lock — nicht zum Lock-KPI addieren.
       if(upgradeAvail){ const u=Math.round(upgrade3); sumUpgrade3 += u; nUpgrade++; upgradeRows.push({prod:r.prod, qty:r.qty, exp:r.exp, val:u}); }  // je Position runden → Kachel = Summe der angezeigten Werte
@@ -798,6 +807,7 @@ function calc(){
         }
       }
       if(monthly && !termMonthly) rec+=' ℹ️ Monatliche Abrechnung berücksichtigt (+5 % ggü. jährlicher Zahlung im Voraus).';
+      if(existing3yLong) rec+=' ℹ️ Bereits laufende 3-Jahres-Lizenz mit über einem Jahr Restlaufzeit — der alte Preis ist für die Restlaufzeit bereits gesichert; ein zusätzlicher 1-Jahres-Preislock bringt keine Ersparnis.';
     }
     // Vor jedem weiteren Icon eine neue Zeile beginnen
     rec = rec.replace(/\s+(💶|ℹ️|🎯|🔄|✅)/g, '<br>$1');
